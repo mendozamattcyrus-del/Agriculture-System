@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgriField - Agriculture Management System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-600-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.css">
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  body { background: #0a0f0a; color: #e5e7eb; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #131a13; }
+  ::-webkit-scrollbar-thumb { background: #2d3a2d; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3d4d3d; }
+  .sidebar-item.active { background: linear-gradient(90deg, rgba(16,185,129,0.15), transparent); color: #34d399; border-left: 3px solid #10b981; }
+  .sidebar-item:hover:not(.active) { background: rgba(255,255,255,0.04); }
+  .card { background: #131a13; border: 1px solid #1f2a1f; border-radius: 12px; }
+  .btn-primary { background: linear-gradient(135deg, #10b981, #059669); transition: all 0.2s; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
+  .btn-secondary { background: #1f2a1f; transition: all 0.2s; }
+  .btn-secondary:hover { background: #263326; }
+  .input-field { background: #0d140d; border: 1px solid #1f2a1f; color: #e5e7eb; transition: all 0.2s; }
+  .input-field:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+  .table-row:hover { background: rgba(255,255,255,0.02); }
+  .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-active { background: rgba(16,185,129,0.15); color: #34d399; }
+  .badge-seedling { background: rgba(132,204,22,0.15); color: #a3e635; }
+  .badge-growing { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .badge-harvest { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .badge-completed { background: rgba(16,185,129,0.15); color: #34d399; }
+  .badge-pending { background: rgba(234,179,8,0.15); color: #facc15; }
+  .badge-overdue { background: rgba(239,68,68,0.15); color: #f87171; }
+  .badge-low { background: rgba(239,68,68,0.15); color: #f87171; }
+  .modal-overlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .stat-card { position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, var(--accent) 0%, transparent 70%); opacity: 0.15; }
+  .field-card:hover { transform: translateY(-4px); border-color: #10b981; }
+  .field-card { transition: all 0.3s; }
+  .progress-bar { background: #1f2a1f; border-radius: 999px; overflow: hidden; height: 6px; }
+  .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; }
+  .weather-card { background: linear-gradient(135deg, #065f46, #064e3b); border: 1px solid #047857; }
+  .crop-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+</style>
+</head>
+<body class="min-h-screen">
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-[#0d140d] border-r border-[#1f2a1f] flex flex-col fixed h-screen">
+    <div class="p-6 border-b border-[#1f2a1f]">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white">AgriField</h1>
+          <p class="text-xs text-gray-500">Farm Management</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 p-4 space-y-1">
+      <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer" data-view="dashboard">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="font-medium">Dashboard</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="fields">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        <span class="font-medium">Fields & Crops</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="inventory">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span class="font-medium">Inventory</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="tasks">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <span class="font-medium">Tasks</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="workers">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span class="font-medium">Workers</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="finance">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="font-medium">Finance</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="weather">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        <span class="font-medium">Weather</span>
+      </div>
+      <div class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-gray-400" data-view="settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="font-medium">Settings</span>
+      </div>
+    </nav>
+    <div class="p-4 border-t border-[#1f2a1f]">
+      <div class="flex items-center gap-3 p-3 rounded-lg bg-[#131a13]">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white font-bold text-sm">FM</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-white truncate">Farm Manager</p>
+          <p class="text-xs text-gray-500 truncate">Administrator</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64">
+    <header class="bg-[#0d140d] border-b border-[#1f2a1f] px-8 py-4 sticky top-0 z-30">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 id="pageTitle" class="text-2xl font-bold text-white">Dashboard</h2>
+          <p id="pageSubtitle" class="text-sm text-gray-500">Welcome back! Here's your farm overview.</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <input type="text" placeholder="Search..." class="input-field pl-10 pr-4 py-2 rounded-lg text-sm w-64">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <button class="relative p-2 rounded-lg bg-[#131a13] hover:bg-[#1f2a1f] transition">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="p-8">
+      <!-- Dashboard View -->
+      <div id="view-dashboard" class="view fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="stat-card card p-6" style="--accent: #10b981;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              </div>
+              <span class="text-xs font-semibold text-emerald-400">+2 fields</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white" id="stat-fields">0</h3>
+            <p class="text-sm text-gray-500 mt-1">Active Fields</p>
+          </div>
+          <div class="stat-card card p-6" style="--accent: #84cc16;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-lg bg-lime-500/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              </div>
+              <span class="text-xs font-semibold text-emerald-400">+15%</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white" id="stat-crops">0</h3>
+            <p class="text-sm text-gray-500 mt-1">Growing Crops</p>
+          </div>
+          <div class="stat-card card p-6" style="--accent: #3b82f6;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+              </div>
+              <span class="text-xs font-semibold text-yellow-400">5 pending</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white" id="stat-tasks">0</h3>
+            <p class="text-sm text-gray-500 mt-1">Pending Tasks</p>
+          </div>
+          <div class="stat-card card p-6" style="--accent: #f59e0b;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-xs font-semibold text-emerald-400">+22.4%</span>
+            </div>
+            <h3 class="text-3xl font-bold text-white">$<span id="stat-revenue">0</span></h3>
+            <p class="text-sm text-gray-500 mt-1">Monthly Revenue</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="card p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-bold text-white">Crop Yield & Revenue</h3>
+                <p class="text-sm text-gray-500">Performance over the last 6 months</p>
+              </div>
+              <select class="input-field px-3 py-1.5 rounded-lg text-sm">
+                <option>Last 6 months</option>
+                <option>This year</option>
+              </select>
+            </div>
+            <canvas id="yieldChart" height="100"></canvas>
+          </div>
+          <div class="card p-6">
+            <h3 class="text-lg font-bold text-white mb-1">Crop Distribution</h3>
+            <p class="text-sm text-gray-500 mb-6">By crop type</p>
+            <canvas id="cropChart"></canvas>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-bold text-white">Upcoming Tasks</h3>
+              <button onclick="switchView('tasks')" class="text-xs text-emerald-500 hover:underline">View all →</button>
+            </div>
+            <div class="space-y-3" id="upcomingTasks"></div>
+          </div>
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-bold text-white">Field Status</h3>
+              <button onclick="switchView('fields')" class="text-xs text-emerald-500 hover:underline">View all →</button>
+            </div>
+            <div class="space-y-3" id="fieldStatus"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fields View -->
+      <div id="view-fields" class="view hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <input type="text" id="fieldSearch" placeholder="Search fields..." class="input-field pl-10 pr-4 py-2 rounded-lg text-sm w-72">
+              <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <select id="fieldFilter" class="input-field px-3 py-2 rounded-lg text-sm">
+              <option value="all">All Stages</option>
+              <option value="seedling">Seedling</option>
+              <option value="growing">Growing</option>
+              <option value="harvest">Ready to Harvest</option>
+            </select>
+          </div>
+          <button onclick="openFieldModal()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Field
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="fieldsGrid"></div>
+      </div>
+
+      <!-- Inventory View -->
+      <div id="view-inventory" class="view hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <input type="text" id="invSearch" placeholder="Search inventory..." class="input-field pl-10 pr-4 py-2 rounded-lg text-sm w-72">
+              <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <select id="invFilter" class="input-field px-3 py-2 rounded-lg text-sm">
+              <option value="all">All Categories</option>
+              <option value="Seeds">Seeds</option>
+              <option value="Fertilizers">Fertilizers</option>
+              <option value="Pesticides">Pesticides</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Feed">Feed</option>
+            </select>
+          </div>
+          <button onclick="openInventoryModal()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Item
+          </button>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-[#0d140d] border-b border-[#1f2a1f]">
+              <tr>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Item</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quantity</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Unit</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tasks View -->
+      <div id="view-tasks" class="view hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <select id="taskFilter" class="input-field px-3 py-2 rounded-lg text-sm">
+              <option value="all">All Tasks</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            <select id="taskType" class="input-field px-3 py-2 rounded-lg text-sm">
+              <option value="all">All Types</option>
+              <option value="Planting">Planting</option>
+              <option value="Watering">Watering</option>
+              <option value="Fertilizing">Fertilizing</option>
+              <option value="Harvesting">Harvesting</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <button onclick="openTaskModal()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Task
+          </button>
+        </div>
+        <div class="space-y-3" id="tasksList"></div>
+      </div>
+
+      <!-- Workers View -->
+      <div id="view-workers" class="view hidden fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <p class="text-gray-400">Manage your farm workforce and assignments</p>
+          <button onclick="openWorkerModal()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Worker
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="workersGrid"></div>
+      </div>
+
+      <!-- Finance View -->
+      <div id="view-finance" class="view hidden fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="card p-6">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              </div>
+              <p class="text-sm text-gray-400">Total Revenue</p>
+            </div>
+            <h3 class="text-2xl font-bold text-white">$<span id="totalRevenue">0</span></h3>
+            <p class="text-xs text-emerald-400 mt-2">↑ 18% from last month</p>
+          </div>
+          <div class="card p-6">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-red-500/15 flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+              </div>
+              <p class="text-sm text-gray-400">Total Expenses</p>
+            </div>
+            <h3 class="text-2xl font-bold text-white">$<span id="totalExpenses">0</span></h3>
+            <p class="text-xs text-red-400 mt-2">↑ 8% from last month</p>
+          </div>
+          <div class="card p-6">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+              </div>
+              <p class="text-sm text-gray-400">Net Profit</p>
+            </div>
+            <h3 class="text-2xl font-bold text-emerald-400">$<span id="netProfit">0</span></h3>
+            <p class="text-xs text-emerald-400 mt-2">↑ 32% from last month</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div class="card p-6 lg:col-span-2">
+            <h3 class="text-lg font-bold text-white mb-6">Financial Overview</h3>
+            <canvas id="financeChart" height="100"></canvas>
+          </div>
+          <div class="card p-6">
+            <h3 class="text-lg font-bold text-white mb-6">Expense Breakdown</h3>
+            <canvas id="expenseChart"></canvas>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="px-6 py-4 border-b border-[#1f2a1f] flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Transactions</h3>
+            <button onclick="openTransactionModal()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold text-white">Record Transaction</button>
+          </div>
+          <table class="w-full">
+            <thead class="bg-[#0d140d] border-b border-[#1f2a1f]">
+              <tr>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                <th class="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
+                <th class="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
+                <th class="text-right px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Weather View -->
+      <div id="view-weather" class="view hidden fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div class="weather-card p-6 lg:col-span-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-emerald-200 mb-2">Current Weather • Green Valley Farm</p>
+                <div class="flex items-center gap-4">
+                  <div class="text-6xl">☀️</div>
+                  <div>
+                    <h2 class="text-5xl font-bold text-white">24°C</h2>
+                    <p class="text-emerald-200 mt-1">Sunny • Feels like 26°C</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-emerald-700/50">
+                  <div>
+                    <p class="text-xs text-emerald-200">Humidity</p>
+                    <p class="text-lg font-bold text-white">62%</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-emerald-200">Wind</p>
+                    <p class="text-lg font-bold text-white">12 km/h</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-emerald-200">Rainfall</p>
+                    <p class="text-lg font-bold text-white">0 mm</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-emerald-200">UV Index</p>
+                    <p class="text-lg font-bold text-white">6 High</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-6">
+            <h3 class="text-lg font-bold text-white mb-4">Farming Advisory</h3>
+            <div class="space-y-3">
+              <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-emerald-400">✓</span>
+                  <p class="text-sm font-semibold text-white">Good for planting</p>
+                </div>
+                <p class="text-xs text-gray-400">Soil moisture is optimal</p>
+              </div>
+              <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-amber-400">!</span>
+                  <p class="text-sm font-semibold text-white">Water crops today</p>
+                </div>
+                <p class="text-xs text-gray-400">No rain expected for 3 days</p>
+              </div>
+              <div class="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-blue-400">ℹ</span>
+                  <p class="text-sm font-semibold text-white">Rain expected Thu</p>
+                </div>
+                <p class="text-xs text-gray-400">Plan outdoor tasks accordingly</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <h3 class="text-lg font-bold text-white mb-6">7-Day Forecast</h3>
+          <div class="grid grid-cols-7 gap-3" id="forecastGrid"></div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="view-settings" class="view hidden fade-in">
+        <div class="card p-6 max-w-3xl">
+          <h3 class="text-lg font-bold text-white mb-6">Farm Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm text-gray-400 mb-2 block">Farm Name</label>
+              <input type="text" value="Green Valley Farm" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 mb-2 block">Owner</label>
+              <input type="text" value="Robert Anderson" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 mb-2 block">Total Area (acres)</label>
+              <input type="number" value="120" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 mb-2 block">Region</label>
+              <select class="input-field w-full px-4 py-2 rounded-lg text-sm">
+                <option>North America</option>
+                <option>Europe</option>
+                <option>Asia</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-sm text-gray-400 mb-2 block">Address</label>
+              <input type="text" value="456 Country Road, Green Valley, CA 95425" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            </div>
+          </div>
+          <div class="mt-6 flex gap-3">
+            <button class="btn-primary px-6 py-2 rounded-lg text-sm font-semibold text-white">Save Changes</button>
+            <button class="btn-secondary px-6 py-2 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+          </div>
+        </div>
+        <div class="card p-6 max-w-3xl mt-6">
+          <h3 class="text-lg font-bold text-white mb-6">Crop Seasons</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-4 rounded-lg bg-[#0d140d]">
+              <div>
+                <p class="font-semibold text-white">Spring Season</p>
+                <p class="text-xs text-gray-500 mt-1">Mar 20 - Jun 20</p>
+              </div>
+              <span class="badge badge-active">Active</span>
+            </div>
+            <div class="flex items-center justify-between p-4 rounded-lg bg-[#0d140d]">
+              <div>
+                <p class="font-semibold text-white">Summer Season</p>
+                <p class="text-xs text-gray-500 mt-1">Jun 21 - Sep 22</p>
+              </div>
+              <span class="badge badge-pending">Upcoming</span>
+            </div>
+            <div class="flex items-center justify-between p-4 rounded-lg bg-[#0d140d]">
+              <div>
+                <p class="font-semibold text-white">Autumn Season</p>
+                <p class="text-xs text-gray-500 mt-1">Sep 23 - Dec 20</p>
+              </div>
+              <span class="badge badge-pending">Upcoming</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Field Modal -->
+<div id="fieldModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-white" id="fieldModalTitle">Add New Field</h3>
+      <button onclick="closeFieldModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="fieldForm" class="space-y-4">
+      <input type="hidden" id="fieldId">
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Field Name</label>
+        <input type="text" id="fieldName" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Crop</label>
+          <input type="text" id="fieldCrop" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Area (acres)</label>
+          <input type="number" id="fieldArea" required step="0.1" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Growth Stage</label>
+          <select id="fieldStage" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option value="seedling">Seedling</option>
+            <option value="growing">Growing</option>
+            <option value="harvest">Ready to Harvest</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Progress (%)</label>
+          <input type="number" id="fieldProgress" required min="0" max="100" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Expected Harvest Date</label>
+        <input type="date" id="fieldHarvest" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-white">Save Field</button>
+        <button type="button" onclick="closeFieldModal()" class="btn-secondary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Inventory Modal -->
+<div id="inventoryModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-white">Add Inventory Item</h3>
+      <button onclick="closeInventoryModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="inventoryForm" class="space-y-4">
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Item Name</label>
+        <input type="text" id="invName" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Category</label>
+          <select id="invCategory" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option>Seeds</option><option>Fertilizers</option><option>Pesticides</option>
+            <option>Equipment</option><option>Feed</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Unit</label>
+          <input type="text" id="invUnit" required placeholder="kg, liters, units" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Quantity</label>
+          <input type="number" id="invQuantity" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Min Threshold</label>
+          <input type="number" id="invThreshold" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-white">Save Item</button>
+        <button type="button" onclick="closeInventoryModal()" class="btn-secondary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-white">Add New Task</h3>
+      <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="taskForm" class="space-y-4">
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Task Title</label>
+        <input type="text" id="taskTitle" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Type</label>
+          <select id="taskTypeInput" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option>Planting</option><option>Watering</option><option>Fertilizing</option>
+            <option>Harvesting</option><option>Maintenance</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Priority</label>
+          <select id="taskPriority" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Due Date</label>
+          <input type="date" id="taskDate" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Assigned To</label>
+          <select id="taskWorker" class="input-field w-full px-4 py-2 rounded-lg text-sm"></select>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Field</label>
+        <select id="taskField" class="input-field w-full px-4 py-2 rounded-lg text-sm"></select>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-white">Save Task</button>
+        <button type="button" onclick="closeTaskModal()" class="btn-secondary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Worker Modal -->
+<div id="workerModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-white">Add New Worker</h3>
+      <button onclick="closeWorkerModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="workerForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">First Name</label>
+          <input type="text" id="workerFirst" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Last Name</label>
+          <input type="text" id="workerLast" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Role</label>
+        <input type="text" id="workerRole" required placeholder="e.g. Field Operator, Supervisor" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Phone</label>
+        <input type="tel" id="workerPhone" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Hourly Rate ($)</label>
+        <input type="number" id="workerRate" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-white">Save Worker</button>
+        <button type="button" onclick="closeWorkerModal()" class="btn-secondary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Transaction Modal -->
+<div id="transactionModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="card w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-white">Record Transaction</h3>
+      <button onclick="closeTransactionModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="transactionForm" class="space-y-4">
+      <div>
+        <label class="text-sm text-gray-400 mb-2 block">Description</label>
+        <input type="text" id="txDesc" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Type</label>
+          <select id="txType" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Category</label>
+          <select id="txCategory" class="input-field w-full px-4 py-2 rounded-lg text-sm">
+            <option>Crop Sales</option><option>Livestock Sales</option><option>Seeds</option>
+            <option>Fertilizers</option><option>Equipment</option><option>Labor</option><option>Utilities</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Amount ($)</label>
+          <input type="number" id="txAmount" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="text-sm text-gray-400 mb-2 block">Date</label>
+          <input type="date" id="txDate" required class="input-field w-full px-4 py-2 rounded-lg text-sm">
+        </div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-white">Save Transaction</button>
+        <button type="button" onclick="closeTransactionModal()" class="btn-secondary flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-300">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const cropEmojis = { 'Wheat': '🌾', 'Corn': '🌽', 'Tomato': '🍅', 'Potato': '🥔', 'Carrot': '🥕', 'Apple': '🍎', 'Rice': '🌾', 'Soybean': '🫘' };
+const getCropEmoji = (crop) => cropEmojis[crop] || '🌱';
+
+let fields = JSON.parse(localStorage.getItem('farm_fields')) || [
+  { id: 1, name: 'North Field A', crop: 'Wheat', area: 15, stage: 'growing', progress: 65, harvest: '2026-10-15', planted: '2026-04-10' },
+  { id: 2, name: 'East Field B', crop: 'Corn', area: 22, stage: 'seedling', progress: 25, harvest: '2026-11-20', planted: '2026-06-01' },
+  { id: 3, name: 'South Field C', crop: 'Tomato', area: 8, stage: 'harvest', progress: 95, harvest: '2026-09-30', planted: '2026-03-15' },
+  { id: 4, name: 'West Field D', crop: 'Potato', area: 18, stage: 'growing', progress: 50, harvest: '2026-10-25', planted: '2026-05-05' },
+  { id: 5, name: 'Orchard E', crop: 'Apple', area: 12, stage: 'growing', progress: 78, harvest: '2026-09-28', planted: '2025-04-20' },
+  { id: 6, name: 'Greenhouse F', crop: 'Carrot', area: 5, stage: 'seedling', progress: 30, harvest: '2026-11-10', planted: '2026-07-15' }
+];
+
+let inventory = JSON.parse(localStorage.getItem('farm_inventory')) || [
+  { id: 1, name: 'Wheat Seeds', category: 'Seeds', quantity: 500, unit: 'kg', threshold: 100 },
+  { id: 2, name: 'Corn Seeds', category: 'Seeds', quantity: 320, unit: 'kg', threshold: 80 },
+  { id: 3, name: 'NPK Fertilizer', category: 'Fertilizers', quantity: 85, unit: 'kg', threshold: 50 },
+  { id: 4, name: 'Organic Compost', category: 'Fertilizers', quantity: 1200, unit: 'kg', threshold: 300 },
+  { id: 5, name: 'Pesticide Spray', category: 'Pesticides', quantity: 25, unit: 'liters', threshold: 20 },
+  { id: 6, name: 'Herbicide', category: 'Pesticides', quantity: 12, unit: 'liters', threshold: 15 },
+  { id: 7, name: 'Tractor', category: 'Equipment', quantity: 2, unit: 'units', threshold: 1 },
+  { id: 8, name: 'Irrigation Pipes', category: 'Equipment', quantity: 45, unit: 'meters', threshold: 10 },
+  { id: 9, name: 'Cattle Feed', category: 'Feed', quantity: 800, unit: 'kg', threshold: 200 }
+];
+
+let tasks = JSON.parse(localStorage.getItem('farm_tasks')) || [
+  { id: 1, title: 'Water North Field A', type: 'Watering', priority: 'high', date: '2026-09-26', worker: 'John Smith', field: 'North Field A', status: 'pending' },
+  { id: 2, title: 'Apply fertilizer to East Field', type: 'Fertilizing', priority: 'medium', date: '2026-09-27', worker: 'Maria Garcia', field: 'East Field B', status: 'pending' },
+  { id: 3, title: 'Harvest tomatoes', type: 'Harvesting', priority: 'high', date: '2026-09-26', worker: 'John Smith', field: 'South Field C', status: 'pending' },
+  { id: 4, title: 'Repair irrigation system', type: 'Maintenance', priority: 'low', date: '2026-09-28', worker: 'David Chen', field: 'West Field D', status: 'pending' },
+  { id: 5, title: 'Plant new carrot seeds', type: 'Planting', priority: 'medium', date: '2026-09-25', worker: 'Maria Garcia', field: 'Greenhouse F', status: 'completed' },
+  { id: 6, title: 'Spray pesticide on orchard', type: 'Fertilizing', priority: 'high', date: '2026-09-24', worker: 'John Smith', field: 'Orchard E', status: 'overdue' }
+];
+
+let workers = JSON.parse(localStorage.getItem('farm_workers')) || [
+  { id: 1, firstName: 'John', lastName: 'Smith', role: 'Field Supervisor', phone: '555-0301', rate: 25, color: 'from-emerald-500 to-green-700', tasks: 3 },
+  { id: 2, firstName: 'Maria', lastName: 'Garcia', role: 'Field Operator', phone: '555-0302', rate: 20, color: 'from-lime-500 to-emerald-700', tasks: 2 },
+  { id: 3, firstName: 'David', lastName: 'Chen', role: 'Equipment Technician', phone: '555-0303', rate: 28, color: 'from-blue-500 to-cyan-700', tasks: 1 },
+  { id: 4, firstName: 'Sarah', lastName: 'Williams', role: 'Harvest Specialist', phone: '555-0304', rate: 22, color: 'from-amber-500 to-orange-700', tasks: 2 }
+];
+
+let transactions = JSON.parse(localStorage.getItem('farm_transactions')) || [
+  { id: 1, date: '2026-09-20', desc: 'Wheat sale - 2 tons', category: 'Crop Sales', type: 'income', amount: 4800 },
+  { id: 2, date: '2026-09-18', desc: 'NPK Fertilizer purchase', category: 'Fertilizers', type: 'expense', amount: 650 },
+  { id: 3, date: '2026-09-15', desc: 'Tomato harvest sale', category: 'Crop Sales', type: 'income', amount: 3200 },
+  { id: 4, date: '2026-09-12', desc: 'Tractor maintenance', category: 'Equipment', type: 'expense', amount: 420 },
+  { id: 5, date: '2026-09-10', desc: 'Worker wages - September', category: 'Labor', type: 'expense', amount: 2800 },
+  { id: 6, date: '2026-09-08', desc: 'Apple pre-order', category: 'Crop Sales', type: 'income', amount: 5600 },
+  { id: 7, date: '2026-09-05', desc: 'Irrigation system parts', category: 'Equipment', type: 'expense', amount: 890 }
+];
+
+const forecast = [
+  { day: 'Sat', icon: '☀️', high: 24, low: 14, rain: 0 },
+  { day: 'Sun', icon: '⛅', high: 22, low: 13, rain: 10 },
+  { day: 'Mon', icon: '🌤️', high: 25, low: 15, rain: 0 },
+  { day: 'Tue', icon: '☀️', high: 27, low: 16, rain: 0 },
+  { day: 'Wed', icon: '🌧️', high: 20, low: 12, rain: 65 },
+  { day: 'Thu', icon: '⛈️', high: 18, low: 11, rain: 80 },
+  { day: 'Fri', icon: '🌤️', high: 23, low: 13, rain: 5 }
+];
+
+function save() {
+  localStorage.setItem('farm_fields', JSON.stringify(fields));
+  localStorage.setItem('farm_inventory', JSON.stringify(inventory));
+  localStorage.setItem('farm_tasks', JSON.stringify(tasks));
+  localStorage.setItem('farm_workers', JSON.stringify(workers));
+  localStorage.setItem('farm_transactions', JSON.stringify(transactions));
+}
+
+function switchView(view) {
+  document.querySelectorAll('.sidebar-item').forEach(i => {
+    i.classList.remove('active');
+    if (i.dataset.view === view) i.classList.add('active');
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+  document.getElementById('view-' + view).classList.remove('hidden');
+  const titles = {
+    dashboard: ['Dashboard', "Welcome back! Here's your farm overview."],
+    fields: ['Fields & Crops', 'Manage your fields and monitor crop growth.'],
+    inventory: ['Inventory', 'Track seeds, fertilizers, and equipment.'],
+    tasks: ['Tasks', 'Schedule and track farm activities.'],
+    workers: ['Workers', 'Manage your farm workforce.'],
+    finance: ['Finance', 'Track income, expenses, and profits.'],
+    weather: ['Weather', 'Current conditions and farming advisory.'],
+    settings: ['Settings', 'Configure your farm information.']
+  };
+  document.getElementById('pageTitle').textContent = titles[view][0];
+  document.getElementById('pageSubtitle').textContent = titles[view][1];
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'fields') renderFields();
+  if (view === 'inventory') renderInventory();
+  if (view === 'tasks') renderTasks();
+  if (view === 'workers') renderWorkers();
+  if (view === 'finance') renderFinance();
+  if (view === 'weather') renderWeather();
+}
+
+document.querySelectorAll('.sidebar-item').forEach(item => {
+  item.addEventListener('click', () => switchView(item.dataset.view));
+});
+
+let yieldChart, cropChart, financeChart, expenseChart;
+
+function renderDashboard() {
+  document.getElementById('stat-fields').textContent = fields.length;
+  document.getElementById('stat-crops').textContent = fields.filter(f => f.stage !== 'harvest').length;
+  document.getElementById('stat-tasks').textContent = tasks.filter(t => t.status === 'pending').length;
+  const revenue = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString();
+
+  // Upcoming tasks
+  const upcoming = tasks.filter(t => t.status === 'pending').slice(0, 4);
+  document.getElementById('upcomingTasks').innerHTML = upcoming.map(t => {
+    const priorityColor = t.priority === 'high' ? 'text-red-400 bg-red-500/15' : t.priority === 'medium' ? 'text-amber-400 bg-amber-500/15' : 'text-blue-400 bg-blue-500/15';
+    return `
+      <div class="flex items-center justify-between p-3 rounded-lg bg-[#0d140d]">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/15 flex items-center justify-center text-lg">${t.type === 'Watering' ? '💧' : t.type === 'Harvesting' ? '🌾' : t.type === 'Planting' ? '🌱' : t.type === 'Fertilizing' ? '🧪' : '🔧'}</div>
+          <div>
+            <p class="text-sm font-semibold text-white">${t.title}</p>
+            <p class="text-xs text-gray-500">${t.field} • ${t.worker}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-gray-400">${t.date}</p>
+          <span class="badge ${priorityColor} mt-1">${t.priority}</span>
+        </div>
+      </div>
+    `;
+  }).join('') || '<p class="text-sm text-gray-500 text-center py-8">No upcoming tasks</p>';
+
+  // Field status
+  document.getElementById('fieldStatus').innerHTML = fields.slice(0, 4).map(f => {
+    const stageColor = f.stage === 'seedling' ? 'bg-lime-400' : f.stage === 'growing' ? 'bg-blue-400' : 'bg-amber-400';
+    return `
+      <div class="p-3 rounded-lg bg-[#0d140d]">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">${getCropEmoji(f.crop)}</span>
+            <p class="text-sm font-semibold text-white">${f.name}</p>
+          </div>
+          <span class="text-xs text-gray-400">${f.crop}</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="progress-bar flex-1">
+            <div class="progress-fill ${stageColor}" style="width: ${f.progress}%"></div>
+          </div>
+          <span class="text-xs font-semibold text-white">${f.progress}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Yield chart
+  if (yieldChart) yieldChart.destroy();
+  const ctx1 = document.getElementById('yieldChart').getContext('2d');
+  const gradient = ctx1.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(16,185,129,0.4)');
+  gradient.addColorStop(1, 'rgba(16,185,129,0)');
+  const gradient2 = ctx1.createLinearGradient(0, 0, 0, 300);
+  gradient2.addColorStop(0, 'rgba(245,158,11,0.4)');
+  gradient2.addColorStop(1, 'rgba(245,158,11,0)');
+  yieldChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      datasets: [
+        { label: 'Yield (tons)', data: [45, 52, 48, 65, 72, 68], borderColor: '#10b981', backgroundColor: gradient, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#10b981' },
+        { label: 'Revenue ($k)', data: [12, 15, 14, 18, 22, revenue/1000], borderColor: '#f59e0b', backgroundColor: gradient2, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#f59e0b' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#9ca3af' } } },
+      scales: {
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280' } },
+        x: { grid: { display: false }, ticks: { color: '#6b7280' } }
+      }
+    }
+  });
+
+  // Crop chart
+  if (cropChart) cropChart.destroy();
+  const cropCounts = {};
+  fields.forEach(f => cropCounts[f.crop] = (cropCounts[f.crop] || 0) + f.area);
+  cropChart = new Chart(document.getElementById('cropChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(cropCounts),
+      datasets: [{ data: Object.values(cropCounts), backgroundColor: ['#10b981', '#84cc16', '#f59e0b', '#3b82f6', '#a855f7', '#ef4444'], borderWidth: 0 }]
+    },
+    options: { responsive: true, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 12, usePointStyle: true } } } }
+  });
+}
+
+// Fields
+function renderFields() {
+  const search = document.getElementById('fieldSearch').value.toLowerCase();
+  const filter = document.getElementById('fieldFilter').value;
+  const filtered = fields.filter(f => {
+    const match = (f.name + ' ' + f.crop).toLowerCase().includes(search);
+    const stageMatch = filter === 'all' || f.stage === filter;
+    return match && stageMatch;
+  });
+  document.getElementById('fieldsGrid').innerHTML = filtered.map(f => {
+    const stageLabel = f.stage === 'seedling' ? 'Seedling' : f.stage === 'growing' ? 'Growing' : 'Ready to Harvest';
+    const stageColor = f.stage === 'seedling' ? 'badge-seedling' : f.stage === 'growing' ? 'badge-growing' : 'badge-harvest';
+    const barColor = f.stage === 'seedling' ? 'bg-lime-400' : f.stage === 'growing' ? 'bg-blue-400' : 'bg-amber-400';
+    return `
+      <div class="field-card card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="crop-icon bg-emerald-500/15">${getCropEmoji(f.crop)}</div>
+            <div>
+              <h3 class="font-bold text-white">${f.name}</h3>
+              <p class="text-xs text-gray-500">${f.area} acres</p>
+            </div>
+          </div>
+          <span class="badge ${stageColor}">${stageLabel}</span>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-gray-400">Growth Progress</span>
+              <span class="text-white font-semibold">${f.progress}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill ${barColor}" style="width: ${f.progress}%"></div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div>
+              <p class="text-xs text-gray-500">Planted</p>
+              <p class="text-sm text-white font-semibold">${f.planted}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Harvest</p>
+              <p class="text-sm text-white font-semibold">${f.harvest}</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-4 pt-4 border-t border-[#1f2a1f]">
+          <button onclick="editField(${f.id})" class="flex-1 btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-300">Edit</button>
+          <button onclick="deleteField(${f.id})" class="flex-1 btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('') || '<p class="text-gray-500 text-center py-12 col-span-3">No fields found</p>';
+}
+
+document.getElementById('fieldSearch').addEventListener('input', renderFields);
+document.getElementById('fieldFilter').addEventListener('change', renderFields);
+
+function openFieldModal(field = null) {
+  document.getElementById('fieldModal').classList.remove('hidden');
+  document.getElementById('fieldModalTitle').textContent = field ? 'Edit Field' : 'Add New Field';
+  document.getElementById('fieldForm').reset();
+  if (field) {
+    document.getElementById('fieldId').value = field.id;
+    document.getElementById('fieldName').value = field.name;
+    document.getElementById('fieldCrop').value = field.crop;
+    document.getElementById('fieldArea').value = field.area;
+    document.getElementById('fieldStage').value = field.stage;
+    document.getElementById('fieldProgress').value = field.progress;
+    document.getElementById('fieldHarvest').value = field.harvest;
+  }
+}
+function closeFieldModal() { document.getElementById('fieldModal').classList.add('hidden'); }
+
+function editField(id) { const f = fields.find(x => x.id === id); if (f) openFieldModal(f); }
+function deleteField(id) { if (confirm('Delete this field?')) { fields = fields.filter(f => f.id !== id); save(); renderFields(); } }
+
+document.getElementById('fieldForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const id = document.getElementById('fieldId').value;
+  const data = {
+    name: document.getElementById('fieldName').value,
+    crop: document.getElementById('fieldCrop').value,
+    area: parseFloat(document.getElementById('fieldArea').value),
+    stage: document.getElementById('fieldStage').value,
+    progress: parseInt(document.getElementById('fieldProgress').value),
+    harvest: document.getElementById('fieldHarvest').value
+  };
+  if (id) { Object.assign(fields.find(f => f.id === parseInt(id)), data); }
+  else { data.id = Date.now(); data.planted = new Date().toISOString().split('T')[0]; fields.push(data); }
+  save(); renderFields(); closeFieldModal();
+});
+
+// Inventory
+function renderInventory() {
+  const search = document.getElementById('invSearch').value.toLowerCase();
+  const filter = document.getElementById('invFilter').value;
+  const filtered = inventory.filter(i => {
+    const match = (i.name + ' ' + i.category).toLowerCase().includes(search);
+    const catMatch = filter === 'all' || i.category === filter;
+    return match && catMatch;
+  });
+  document.getElementById('inventoryTable').innerHTML = filtered.map(i => {
+    const isLow = i.quantity <= i.threshold;
+    return `
+      <tr class="table-row border-b border-[#1f2a1f]">
+        <td class="px-6 py-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center text-lg">${i.category === 'Seeds' ? '🌱' : i.category === 'Fertilizers' ? '🧪' : i.category === 'Pesticides' ? '🧴' : i.category === 'Equipment' ? '🚜' : '🥬'}</div>
+            <p class="text-sm font-semibold text-white">${i.name}</p>
+          </div>
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-400">${i.category}</td>
+        <td class="px-6 py-4 text-sm font-semibold ${isLow ? 'text-red-400' : 'text-white'}">${i.quantity}</td>
+        <td class="px-6 py-4 text-sm text-gray-400">${i.unit}</td>
+        <td class="px-6 py-4">${isLow ? '<span class="badge badge-low">Low Stock</span>' : '<span class="badge badge-active">In Stock</span>'}</td>
+        <td class="px-6 py-4 text-right">
+          <button onclick="deleteInventory(${i.id})" class="text-gray-400 hover:text-red-500 p-1">
+            <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/></svg>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">No items found</td></tr>';
+}
+
+document.getElementById('invSearch').addEventListener('input', renderInventory);
+document.getElementById('invFilter').addEventListener('change', renderInventory);
+
+function openInventoryModal() { document.getElementById('inventoryModal').classList.remove('hidden'); document.getElementById('inventoryForm').reset(); }
+function closeInventoryModal() { document.getElementById('inventoryModal').classList.add('hidden'); }
+function deleteInventory(id) { if (confirm('Delete this item?')) { inventory = inventory.filter(i => i.id !== id); save(); renderInventory(); } }
+
+document.getElementById('inventoryForm').addEventListener('submit', e => {
+  e.preventDefault();
+  inventory.push({
+    id: Date.now(),
+    name: document.getElementById('invName').value,
+    category: document.getElementById('invCategory').value,
+    quantity: parseInt(document.getElementById('invQuantity').value),
+    unit: document.getElementById('invUnit').value,
+    threshold: parseInt(document.getElementById('invThreshold').value)
+  });
+  save(); renderInventory(); closeInventoryModal();
+});
+
+// Tasks
+function renderTasks() {
+  const filter = document.getElementById('taskFilter').value;
+  const type = document.getElementById('taskType').value;
+  const filtered = tasks.filter(t => {
+    const statusMatch = filter === 'all' || t.status === filter;
+    const typeMatch = type === 'all' || t.type === type;
+    return statusMatch && typeMatch;
+  });
+  document.getElementById('tasksList').innerHTML = filtered.map(t => {
+    const priorityColor = t.priority === 'high' ? 'text-red-400 bg-red-500/15' : t.priority === 'medium' ? 'text-amber-400 bg-amber-500/15' : 'text-blue-400 bg-blue-500/15';
+    const statusColor = t.status === 'completed' ? 'badge-completed' : t.status === 'overdue' ? 'badge-overdue' : 'badge-pending';
+    const icon = t.type === 'Watering' ? '💧' : t.type === 'Harvesting' ? '🌾' : t.type === 'Planting' ? '🌱' : t.type === 'Fertilizing' ? '🧪' : '🔧';
+    return `
+      <div class="card p-4 flex items-center justify-between">
+        <div class="flex items-center gap-4 flex-1">
+          <div class="w-12 h-12 rounded-lg bg-emerald-500/15 flex items-center justify-center text-2xl">${icon}</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-semibold text-white ${t.status === 'completed' ? 'line-through opacity-60' : ''}">${t.title}</h3>
+              <span class="badge ${priorityColor}">${t.priority}</span>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+              <span>📍 ${t.field}</span>
+              <span>👤 ${t.worker}</span>
+              <span>📅 ${t.date}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="badge ${statusColor}">${t.status}</span>
+          ${t.status !== 'completed' ? `<button onclick="completeTask(${t.id})" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400">Complete</button>` : ''}
+          <button onclick="deleteTask(${t.id})" class="text-gray-400 hover:text-red-500 p-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('') || '<p class="text-gray-500 text-center py-12">No tasks found</p>';
+}
+
+document.getElementById('taskFilter').addEventListener('change', renderTasks);
+document.getElementById('taskType').addEventListener('change', renderTasks);
+
+function completeTask(id) { const t = tasks.find(x => x.id === id); if (t) { t.status = 'completed'; save(); renderTasks(); } }
+function deleteTask(id) { if (confirm('Delete this task?')) { tasks = tasks.filter(t => t.id !== id); save(); renderTasks(); } }
+
+function openTaskModal() {
+  document.getElementById('taskModal').classList.remove('hidden');
+  document.getElementById('taskForm').reset();
+  document.getElementById('taskWorker').innerHTML = workers.map(w => `<option>${w.firstName} ${w.lastName}</option>`).join('');
+  document.getElementById('taskField').innerHTML = fields.map(f => `<option>${f.name}</option>`).join('');
+  document.getElementById('taskDate').value = new Date().toISOString().split('T')[0];
+}
+function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); }
+
+document.getElementById('taskForm').addEventListener('submit', e => {
+  e.preventDefault();
+  tasks.push({
+    id: Date.now(),
+    title: document.getElementById('taskTitle').value,
+    type: document.getElementById('taskTypeInput').value,
+    priority: document.getElementById('taskPriority').value,
+    date: document.getElementById('taskDate').value,
+    worker: document.getElementById('taskWorker').value,
+    field: document.getElementById('taskField').value,
+    status: 'pending'
+  });
+  save(); renderTasks(); closeTaskModal();
+});
+
+// Workers
+function renderWorkers() {
+  document.getElementById('workersGrid').innerHTML = workers.map(w => {
+    const workerTasks = tasks.filter(t => t.worker === `${w.firstName} ${w.lastName}` && t.status === 'pending').length;
+    return `
+      <div class="field-card card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br ${w.color} flex items-center justify-center text-white font-bold text-xl">${w.firstName[0]}${w.lastName[0]}</div>
+          <button onclick="deleteWorker(${w.id})" class="text-gray-500 hover:text-red-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <h3 class="text-lg font-bold text-white">${w.firstName} ${w.lastName}</h3>
+        <p class="text-sm text-emerald-400 mt-1">${w.role}</p>
+        <div class="mt-4 pt-4 border-t border-[#1f2a1f] space-y-2">
+          <div class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            <span>${w.phone}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1"/></svg>
+            <span>$${w.rate}/hour</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+            <span>${workerTasks} active tasks</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openWorkerModal() { document.getElementById('workerModal').classList.remove('hidden'); document.getElementById('workerForm').reset(); }
+function closeWorkerModal() { document.getElementById('workerModal').classList.add('hidden'); }
+function deleteWorker(id) { if (confirm('Delete this worker?')) { workers = workers.filter(w => w.id !== id); save(); renderWorkers(); } }
+
+document.getElementById('workerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const colors = ['from-emerald-500 to-green-700','from-lime-500 to-emerald-700','from-blue-500 to-cyan-700','from-amber-500 to-orange-700','from-purple-500 to-pink-700'];
+  workers.push({
+    id: Date.now(),
+    firstName: document.getElementById('workerFirst').value,
+    lastName: document.getElementById('workerLast').value,
+    role: document.getElementById('workerRole').value,
+    phone: document.getElementById('workerPhone').value,
+    rate: parseInt(document.getElementById('workerRate').value),
+    color: colors[Math.floor(Math.random() * colors.length)],
+    tasks: 0
+  });
+  save(); renderWorkers(); closeWorkerModal();
+});
+
+// Finance
+function renderFinance() {
+  const revenue = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expenses = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  document.getElementById('totalRevenue').textContent = revenue.toLocaleString();
+  document.getElementById('totalExpenses').textContent = expenses.toLocaleString();
+  document.getElementById('netProfit').textContent = (revenue - expenses).toLocaleString();
+
+  if (financeChart) financeChart.destroy();
+  financeChart = new Chart(document.getElementById('financeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      datasets: [
+        { label: 'Income', data: [8500, 12000, 9800, 15000, 13500, revenue], backgroundColor: '#10b981', borderRadius: 6 },
+        { label: 'Expenses', data: [5200, 6800, 7100, 8500, 6200, expenses], backgroundColor: '#ef4444', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#9ca3af' } } },
+      scales: {
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', callback: v => '$' + v } },
+        x: { grid: { display: false }, ticks: { color: '#6b7280' } }
+      }
+    }
+  });
+
+  if (expenseChart) expenseChart.destroy();
+  const expByCat = {};
+  transactions.filter(t => t.type === 'expense').forEach(t => expByCat[t.category] = (expByCat[t.category] || 0) + t.amount);
+  expenseChart = new Chart(document.getElementById('expenseChart'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(expByCat),
+      datasets: [{ data: Object.values(expByCat), backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#a855f7', '#ef4444'], borderWidth: 0 }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 12, usePointStyle: true } } } }
+  });
+
+  document.getElementById('transactionsTable').innerHTML = transactions.slice().reverse().map(t => `
+    <tr class="table-row border-b border-[#1f2a1f]">
+      <td class="px-6 py-4 text-sm text-gray-400">${t.date}</td>
+      <td class="px-6 py-4 text-sm text-white font-medium">${t.desc}</td>
+      <td class="px-6 py-4 text-sm text-gray-400">${t.category}</td>
+      <td class="px-6 py-4"><span class="badge ${t.type === 'income' ? 'badge-active' : 'badge-overdue'}">${t.type}</span></td>
+      <td class="px-6 py-4 text-sm font-bold ${t.type === 'income' ? 'text-emerald-400' : 'text-red-400'} text-right">${t.type === 'income' ? '+' : '-'}$${t.amount.toLocaleString()}</td>
+      <td class="px-6 py-4 text-right">
+        <button onclick="deleteTransaction(${t.id})" class="text-gray-400 hover:text-red-500 p-1">
+          <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function deleteTransaction(id) { if (confirm('Delete this transaction?')) { transactions = transactions.filter(t => t.id !== id); save(); renderFinance(); } }
+
+function openTransactionModal() {
+  document.getElementById('transactionModal').classList.remove('hidden');
+  document.getElementById('transactionForm').reset();
+  document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+}
+function closeTransactionModal() { document.getElementById('transactionModal').classList.add('hidden'); }
+
+document.getElementById('transactionForm').addEventListener('submit', e => {
+  e.preventDefault();
+  transactions.push({
+    id: Date.now(),
+    date: document.getElementById('txDate').value,
+    desc: document.getElementById('txDesc').value,
+    category: document.getElementById('txCategory').value,
+    type: document.getElementById('txType').value,
+    amount: parseFloat(document.getElementById('txAmount').value)
+  });
+  save(); renderFinance(); closeTransactionModal();
+});
+
+// Weather
+function renderWeather() {
+  document.getElementById('forecastGrid').innerHTML = forecast.map((f, i) => `
+    <div class="card p-4 text-center ${i === 0 ? 'border-emerald-500' : ''}">
+      <p class="text-xs text-gray-400 mb-2">${i === 0 ? 'Today' : f.day}</p>
+      <div class="text-3xl mb-2">${f.icon}</div>
+      <p class="text-sm font-bold text-white">${f.high}° / ${f.low}°</p>
+      <p class="text-xs text-blue-400 mt-1">💧 ${f.rain}%</p>
+    </div>
+  `).join('');
+}
+
+// Init
+renderDashboard();
+</script>
+</body>
+</html>
